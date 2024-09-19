@@ -1,0 +1,23 @@
+{
+    "types": {
+        "StarkNetDomain": [
+            { "name": "name", "type": "felt" },
+            { "name": "version", "type": "felt" },
+            { "name": "chainId", "type": "felt" }
+        ],
+        "Message": [
+            { "name": "contents", "type": "felt" },
+            { "name": "challenge", "type": "felt" }
+        ]
+    },
+    "primaryType": "Message",
+    "domain": {
+        "name": "Chain Quest challenge message",
+        "version": "1",
+        "chainId": 1
+    },
+    "message": {
+        "contents": "Sign this to login",
+        "challenge": "rvdepn7b9n"
+    }
+}
