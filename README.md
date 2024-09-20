@@ -2,7 +2,25 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
-First, run the development server:
+First, install the dependencies:
+
+```bash
+npm install
+```
+Initialize the database using prisma migrations:
+```bash
+npx prisma migrate dev --name init
+```
+Generate the prisma client:
+```bash
+npx prisma generate
+```
+Install [bun](https://bun.sh). Then start the development backend server:
+```bash
+bun server
+```
+
+Then, you may run the development server:
 
 ```bash
 npm run dev
