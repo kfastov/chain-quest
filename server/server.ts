@@ -25,7 +25,7 @@ import challengeTypedData from './data/typedData.json';
 
 // Generate a random challenge
 function generateChallenge() {
-  return crypto.randomBytes(32).toString('hex');
+  return crypto.randomBytes(31).toString('base64').slice(0, 31);
 }
 
 // Generate a typed data to sign from the challenge
@@ -76,6 +76,7 @@ app.get('/api/users/:wallet_address', async (req, res) => {
 });
 
 app.post('/api/auth/challenge', async (req, res) => {
+    console.log('challenge request received');
   const { wallet_address } = req.body;
   if (!wallet_address) {
     return res.status(400).json({ error: 'Wallet address is required' });
@@ -85,6 +86,7 @@ app.post('/api/auth/challenge', async (req, res) => {
   challenges.set(wallet_address, challenge);
 
   const challengeData = generateTypedData(challenge);
+  console.log('sending challengeData:', challengeData);
   res.json({ challengeData });
 });
 
@@ -103,16 +105,21 @@ app.post('/api/auth/verify', async (req, res) => {
     const challengeData = generateTypedData(challenge);
     const isCorrect = await account.verifyMessage(challengeData, signature);
     if (!isCorrect) {
+        console.log('challenge:', challenge);
+        console.log('challengeData:', challengeData);
+        console.log('signature:', signature);
+        console.log('Invalid signature');
       return res.status(401).json({ error: 'Invalid signature' });
     }
 
     // Authentication successful
     // Here you can generate a JWT token or session for the user
-    res.json({ message: 'Authentication successful' });
+    res.json({ message: 'Authentication successful', success: true });
 
     // Clean up the challenge
     challenges.delete(wallet_address);
   } catch (error) {
+    console.log('Error during verification:', error);
     res.status(401).json({ error: 'Invalid signature' });
   }
 });
