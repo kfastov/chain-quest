@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import prisma from './services/db';
-import { stark, hash, typedData, Account, RpcProvider } from 'starknet';
+import { stark, hash, typedData, Account, RpcProvider, SignerInterface } from 'starknet';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
@@ -46,7 +46,7 @@ function authenticateToken(req: Request, res: express.Response, next: express.Ne
 console.log("ACCOUNT_ADDRESS:", process.env.DEPLOYER_ADDRESS);
 const privateKey = process.env.DEPLOYER_PRIVATE_KEY ?? "";
 const accountAddress: string = process.env.DEPLOYER_ADDRESS ?? "";
-const account = new Account(provider, accountAddress, privateKey);
+const signer = new Account(provider, accountAddress, privateKey);
 
 import challengeTypedData from './data/typedData.json';
 
@@ -144,6 +144,7 @@ app.post('/api/auth/verify', async (req, res) => {
 
   try {
     const challengeData = generateTypedData(challenge);
+    const account = new Account(provider, wallet_address, null as unknown as SignerInterface);
     const isCorrect = await account.verifyMessage(challengeData, signature);
     if (!isCorrect) {
         console.log('Invalid signature');

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import SetNicknameForm from '@/components/SetNicknameForm';
+import WalletBar from '@/components/WalletBar';
 
 export default function Dashboard() {
   const [nickname, setNickname] = useState<string | null>(null);
@@ -41,15 +42,20 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-background text-foreground">
-      <h1 className="text-4xl font-bold mb-4">Welcome to Your Dashboard</h1>
-      {isLoading ? (
-        <p>Loading...</p>
-      ) : nickname ? (
-        <p className="text-xl">Hello, {nickname}!</p>
-      ) : (
-        <SetNicknameForm onNicknameSet={handleNicknameSet} />
-      )}
+    <div className="flex flex-col min-h-screen bg-background text-foreground">
+      <header className="w-full p-4 bg-gray-100">
+        <WalletBar />
+      </header>
+      <main className="flex-grow flex flex-col items-center justify-center">
+        <h1 className="text-4xl font-bold mb-4">Welcome to Your Dashboard</h1>
+        {isLoading ? (
+          <p>Loading...</p>
+        ) : nickname ? (
+          <p className="text-xl">Hello, {nickname}!</p>
+        ) : (
+          <SetNicknameForm onNicknameSet={handleNicknameSet} />
+        )}
+      </main>
     </div>
   );
 }

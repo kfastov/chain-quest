@@ -10,7 +10,7 @@ const SignatureLogin: React.FC = () => {
     const [challengeData, setChallengeData] = useState(null);
     const [token, setToken] = useState<string | null>(null);
 
-    const { address: userAddress } = useAccount();
+    const { address: userAddress, isConnected } = useAccount();
 
     const { signTypedDataAsync: signChallenge, data: signedChallenge, error: signError } = useSignTypedData({});
 
@@ -32,9 +32,13 @@ const SignatureLogin: React.FC = () => {
 
             
             setChallengeData(response.data.challengeData);
-            console.log('Challenge received:', response.data.challengeData);
 
-            const signature = await signChallenge(response.data.challengeData as any);
+            let challengeData = JSON.parse(JSON.stringify(response.data.challengeData));
+
+            console.log('Challenge received:', challengeData);
+            const signature = await signChallenge(
+                 challengeData
+            );
             console.log('Signature:', signature);
 
             // Send signature to server
@@ -62,24 +66,17 @@ const SignatureLogin: React.FC = () => {
         }
     };
 
-    // Add a function to make authenticated requests
-    const makeAuthenticatedRequest = async () => {
-        try {
-            const response = await axios.get('http://localhost:3001/api/users/me', {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            console.log('Protected data:', response.data);
-        } catch (error) {
-            console.error('Error fetching protected data:', error);
-        }
-    };
-
     return (
-        <div>
-            <button onClick={handleRegistration}>Register</button>
-            {challengeData && <p>Challenge received. Ready for signature.</p>}
-            {signError && <p>Error signing challenge: {signError.message}</p>}
-            {token && <button onClick={makeAuthenticatedRequest}>Fetch Protected Data</button>}
+        <div className="flex flex-col items-center">
+            <button
+                onClick={handleRegistration}
+                className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out"
+                disabled={!isConnected}
+            >
+                {isConnected ? "Login" : "Please Connect Wallet"}
+            </button>
+            {challengeData && <p className="mt-2 text-green-600">Challenge received. Ready for signature.</p>}
+            {signError && <p className="mt-2 text-red-600">Error signing challenge: {signError.message}</p>}
         </div>
     );
 };

@@ -14,7 +14,7 @@
     "domain": {
         "name": "Chain Quest challenge message",
         "version": "1",
-        "chainId": 1
+        "chainId": "SN_SEPOLIA"
     },
     "message": {
         "contents": "Sign this to login",
