@@ -3,7 +3,8 @@ import cors from 'cors';
 import prisma from './services/db';
 import { stark, hash, typedData, Account, RpcProvider } from 'starknet';
 import crypto from 'crypto';
-
+import jwt from 'jsonwebtoken';
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -14,6 +15,32 @@ app.use(express.json());
 const provider = new RpcProvider({
   nodeUrl: process.env.RPC_ENDPOINT,
 });
+
+function generateToken(user: { id: number, wallet_address: string }): string {
+    return jwt.sign({ id: user.id, wallet_address: user.wallet_address }, JWT_SECRET, { expiresIn: '1d' });
+}
+
+// Add this import at the top of the file
+import { Request as ExpressRequest } from 'express';
+
+// Add this type declaration
+interface Request extends ExpressRequest {
+  user?: jwt.JwtPayload;
+}
+
+// Update the authenticateToken function signature
+function authenticateToken(req: Request, res: express.Response, next: express.NextFunction) {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+  
+    if (token == null) return res.sendStatus(401);
+  
+    jwt.verify(token, JWT_SECRET as string, (err: any, user: any) => {
+      if (err) return res.sendStatus(403);
+      req.user = user as jwt.JwtPayload;
+      next();
+    });
+}
 
 // initialize existing predeployed account
 console.log("ACCOUNT_ADDRESS:", process.env.DEPLOYER_ADDRESS);
@@ -59,6 +86,21 @@ app.post('/api/users', async (req, res) => {
   }
 });
 
+// Update the route handler signature
+app.get('/api/users/me', authenticateToken, async (req: Request, res) => {
+    try {
+      console.log('Fetching user data for wallet address:', req.user?.wallet_address);
+      const user = await prisma.user.findUnique({
+        where: { wallet_address: req.user?.wallet_address },
+        select: { id: true, wallet_address: true, nickname: true }
+      });
+      res.json({ message: 'This is a protected route', user });
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      res.status(500).json({ error: 'Error fetching user data' });
+    }
+});
+
 app.get('/api/users/:wallet_address', async (req, res) => {
   const { wallet_address } = req.params;
   try {
@@ -86,7 +128,6 @@ app.post('/api/auth/challenge', async (req, res) => {
   challenges.set(wallet_address, challenge);
 
   const challengeData = generateTypedData(challenge);
-  console.log('sending challengeData:', challengeData);
   res.json({ challengeData });
 });
 
@@ -105,22 +146,70 @@ app.post('/api/auth/verify', async (req, res) => {
     const challengeData = generateTypedData(challenge);
     const isCorrect = await account.verifyMessage(challengeData, signature);
     if (!isCorrect) {
-        console.log('challenge:', challenge);
-        console.log('challengeData:', challengeData);
-        console.log('signature:', signature);
         console.log('Invalid signature');
       return res.status(401).json({ error: 'Invalid signature' });
     }
 
     // Authentication successful
-    // Here you can generate a JWT token or session for the user
-    res.json({ message: 'Authentication successful', success: true });
+    // Add user to the database
+    try {
+      const user = await prisma.user.upsert({
+        where: { wallet_address },
+        update: {}, // Update nothing if user exists
+        create: { wallet_address }, // Create new user if not exists
+      });
+
+      // Generate a JWT token or session for the user (implementation depends on your auth strategy)
+      const token = generateToken(user);
+
+      res.json({ 
+        message: 'Authentication successful', 
+        success: true,
+        user: { id: user.id, wallet_address: user.wallet_address },
+        token: token, // Uncomment if using JWT
+      });
+    } catch (dbError) {
+      console.error('Error adding user to database:', dbError);
+      return res.status(500).json({ error: 'Error adding user to database' });
+    }
 
     // Clean up the challenge
     challenges.delete(wallet_address);
   } catch (error) {
     console.log('Error during verification:', error);
     res.status(401).json({ error: 'Invalid signature' });
+  }
+});
+
+// Add this new endpoint
+app.put('/api/users/update/self', authenticateToken, async (req: Request, res) => {
+  if (!req.user || !req.user.wallet_address) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  const { nickname, starknet_id } = req.body;
+  
+  try {
+    const updatedUser = await prisma.user.update({
+      where: { wallet_address: req.user.wallet_address },
+      data: {
+        nickname: nickname || undefined,
+        starknet_id: starknet_id || undefined,
+      },
+    });
+
+    res.json({
+      message: 'User updated successfully',
+      user: {
+        id: updatedUser.id,
+        wallet_address: updatedUser.wallet_address,
+        nickname: updatedUser.nickname,
+        starknet_id: updatedUser.starknet_id,
+      },
+    });
+  } catch (error) {
+    console.error('Error updating user:', error);
+    res.status(500).json({ error: 'Error updating user' });
   }
 });
 

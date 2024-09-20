@@ -1,6 +1,6 @@
 import dynamic from 'next/dynamic';
 const WalletBar = dynamic(() => import('../components/WalletBar'), { ssr: false })
-const RegistrationForm = dynamic(() => import('../components/RegistrationForm'), { ssr: false });
+const SignatureLogin = dynamic(() => import('../components/SignatureLogin'), { ssr: false });
 
 import Image from "next/image";
 
@@ -11,7 +11,7 @@ export default function Home() {
       <div className="bg-white p-4 border-black border">
             <h2 className="text-xl font-bold mb-2">Wallet Connection</h2>
           <WalletBar />
-          <RegistrationForm />
+          <SignatureLogin />
         </div>
       </main>
     </div>

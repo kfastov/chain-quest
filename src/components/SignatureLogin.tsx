@@ -4,13 +4,17 @@ import axios from 'axios';
 import { useAccount } from '@starknet-react/core';
 import { useSignTypedData } from "@starknet-react/core";
 import { shortString } from "starknet";
+import { useRouter } from 'next/navigation';
 
-const RegistrationForm: React.FC = () => {
+const SignatureLogin: React.FC = () => {
     const [challengeData, setChallengeData] = useState(null);
+    const [token, setToken] = useState<string | null>(null);
 
     const { address: userAddress } = useAccount();
 
     const { signTypedDataAsync: signChallenge, data: signedChallenge, error: signError } = useSignTypedData({});
+
+    const router = useRouter();
 
     const handleRegistration = async () => {
         try {
@@ -43,16 +47,30 @@ const RegistrationForm: React.FC = () => {
 
             // Handle the server response (e.g., show success message, redirect, etc.)
             if (verificationResponse.data.success) {
-                console.log('Registration successful');
-                // Add your logic here (e.g., update UI, redirect, etc.)
+                console.log('Login successful');
+                setToken(verificationResponse.data.token);
+                localStorage.setItem('jwtToken', verificationResponse.data.token);
+                router.push('/dashboard'); // Redirect to dashboard or protected route
             } else {
-                console.error('Registration failed:', verificationResponse.data.message);
+                console.error('Login failed:', verificationResponse.data.message);
                 // Handle failure (e.g., show error message to user)
             }
 
         } catch (error) {
-            console.error('Error during registration:', error);
+            console.error('Error during login:', error);
             // Handle error (e.g., show error message to user)
+        }
+    };
+
+    // Add a function to make authenticated requests
+    const makeAuthenticatedRequest = async () => {
+        try {
+            const response = await axios.get('http://localhost:3001/api/users/me', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            console.log('Protected data:', response.data);
+        } catch (error) {
+            console.error('Error fetching protected data:', error);
         }
     };
 
@@ -61,8 +79,9 @@ const RegistrationForm: React.FC = () => {
             <button onClick={handleRegistration}>Register</button>
             {challengeData && <p>Challenge received. Ready for signature.</p>}
             {signError && <p>Error signing challenge: {signError.message}</p>}
+            {token && <button onClick={makeAuthenticatedRequest}>Fetch Protected Data</button>}
         </div>
     );
 };
 
-export default RegistrationForm;
+export default SignatureLogin;
