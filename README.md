@@ -1,54 +1,112 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Requirements
+- Node v22.9.0
+- NPM 10.8.3
+- PostgreSQL Latest.
+- Bun.
+- Wallet Account(Argentx or Braavos).
 
-## Getting Started
-
-First, install the dependencies:
-
-```bash
-npm install
+## Setup Instruction.
+1. Clone the Repository.
 ```
-Initialize the database using prisma migrations:
+git clone https://github.com/kfastov/chain-quest.git
+cd chain-quest
+```
+
+## Backend.
+Install [PostgreSQL](https://www.postgresql.org/download/linux/ubuntu/).
+```bash
+sudo apt install curl ca-certificates
+sudo install -d /usr/share/postgresql-common/pgdg
+sudo curl -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail https://www.postgresql.org/media/keys/ACCC4CF8.asc
+sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+sudo apt update
+sudo apt -y install postgresql
+```
+
+Configuring the PostgreSQL.
+1. Switch to Postgres user.
+```bash
+sudo -i -u postgres
+```
+2. Create a database. Replace _mydatabase_ with the name you want to give to your database.
+```bash
+createdb mydatabase
+```
+3. Connect to the database by replacing mydatabase by the database name you have created.
+```bash
+psql -d mydatabase
+```
+4. `\conninfo` To get the information about the current database connection such as the connected database, user, host and port. Note the port number.
+5. `\password postgres` To set/change the passowrd of the postgres user.
+6. `\q` To disconnect from the database.
+7. `exit` To logout/exit of the postgres user.
+
+Instialize the database using Prisma. A new folder called _prisma_ in which _prisma.schema_ will be created.
+Environment Variable _.env_ file will also get created.
+```bash
+npx prisma init --datasource-provider postgresql 
+```
+In _prisma.schema_ file add the following code.
+'''bash
+model User {
+  id    Int    @id @default(autoincrement())
+  email String
+  name  String
+}
+'''
+In .env file replace _johndoe_ with postgres, _randowpassword_ with the password you created for the postgres user and _mydb_ with the database you created.
+
+Sync the database with your schema and generate the Prisma Client.
 ```bash
 npx prisma migrate dev --name init
 ```
-Generate the prisma client:
+
+## Frontend
+Install the Node Package Manager. You will require curl to install.
 ```bash
-npx prisma generate
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
 ```
-Install [bun](https://bun.sh). Then start the development backend server:
+Run `source ~/.bashrc` to reload the configuration.
+Verify by executing `nvm --v`.
+
+Install Node.js.
+```bash
+nvm install node
+```
+Verify by executing `node -v` and `npm -v`.
+
+Install the dependencies related to the project. Note: You should be in the project folder, i.e., chain-quest.
+```bash
+npm install
+```
+
+Install [Bun](https://bun.sh/).
+_unzip_ is required to install Bun
+```bash
+sudo apt install unzip
+curl -fsSL https://bun.sh/install | bash
+```
+Run `source ~/.bashrc` to reload the configuration.
+Verify by executing `bun -v`.
+
+Add the following code .env file. You will require a wallet account such as ArgentX or Braavos.
+- Replace _<Private Key>_ with the wallets private key and _<Address>_ with the wallets address.
+- Based on Mainnet or Testnet or Devnet add the enpoint. Below Sepolia testnet RPC Endpoint is added.
+```bash
+DEPLOYER_PRIVATE_KEY=<Private Key>
+DEPLOYER_ADDRESS=<Address>
+RPC_ENDPOINT=https://starknet-sepolia.public.blastapi.io/
+```
+
+Start the backend server.
 ```bash
 bun server
 ```
 
-Then, you may run the development server:
-
+Open another terminal run the development server:
 ```bash
 npm run dev
 # or
-yarn dev
-# or
-pnpm dev
-# or
 bun dev
 ```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Open [http://localhost:3000](http://localhost:3000) in your browser to see the result.
