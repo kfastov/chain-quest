@@ -47,13 +47,13 @@ Environment Variable _.env_ file will also get created.
 npx prisma init --datasource-provider postgresql 
 ```
 In _prisma.schema_ file add the following code.
-'''bash
+```bash
 model User {
   id    Int    @id @default(autoincrement())
   email String
   name  String
 }
-'''
+```
 In .env file replace _johndoe_ with postgres, _randowpassword_ with the password you created for the postgres user and _mydb_ with the database you created.
 
 Sync the database with your schema and generate the Prisma Client.
