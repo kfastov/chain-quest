@@ -6,7 +6,7 @@
 - Wallet Account(Argentx or Braavos).
 
 ## Setup Instruction.
-1. Clone the Repository.
+Clone the Repository.
 ```
 git clone https://github.com/kfastov/chain-quest.git
 cd chain-quest
@@ -14,12 +14,26 @@ cd chain-quest
 
 ## Backend.
 Install [PostgreSQL](https://www.postgresql.org/download/linux/ubuntu/).
+Import the repository signing key.
 ```bash
 sudo apt install curl ca-certificates
+```
+```bash
 sudo install -d /usr/share/postgresql-common/pgdg
+```
+```bash
 sudo curl -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail https://www.postgresql.org/media/keys/ACCC4CF8.asc
+```
+Create the repository configuration file.
+```bash
 sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+```
+Update the package lists.
+```bash
 sudo apt update
+```
+Install the latest version of PostgreSQL.
+```bash
 sudo apt -y install postgresql
 ```
 
@@ -41,6 +55,20 @@ psql -d mydatabase
 6. `\q` To disconnect from the database.
 7. `exit` To logout/exit of the postgres user.
 
+## Frontend
+Install the Node Package Manager. You will require curl to install.
+```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+```
+Run `source ~/.bashrc` to reload the configuration.
+Verify by executing `nvm -v`.
+
+Install Node.js.
+```bash
+nvm install node
+```
+Verify by executing `node -v` and `npm -v`.
+
 Instialize the database using Prisma. A new folder called _prisma_ in which _prisma.schema_ will be created.
 Environment Variable _.env_ file will also get created.
 ```bash
@@ -55,25 +83,14 @@ model User {
 }
 ```
 In .env file replace _johndoe_ with postgres, _randowpassword_ with the password you created for the postgres user and _mydb_ with the database you created.
+```bash
+DATABASE_URL="postgresql://postgres:randompassword@localhost:5432/mydb?schema=public"
+```
 
 Sync the database with your schema and generate the Prisma Client.
 ```bash
 npx prisma migrate dev --name init
 ```
-
-## Frontend
-Install the Node Package Manager. You will require curl to install.
-```bash
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
-```
-Run `source ~/.bashrc` to reload the configuration.
-Verify by executing `nvm --v`.
-
-Install Node.js.
-```bash
-nvm install node
-```
-Verify by executing `node -v` and `npm -v`.
 
 Install the dependencies related to the project. Note: You should be in the project folder, i.e., chain-quest.
 ```bash
@@ -81,20 +98,22 @@ npm install
 ```
 
 Install [Bun](https://bun.sh/).
-_unzip_ is required to install Bun
+_unzip_ is required to install Bun.
 ```bash
 sudo apt install unzip
+```
+```bash
 curl -fsSL https://bun.sh/install | bash
 ```
 Run `source ~/.bashrc` to reload the configuration.
 Verify by executing `bun -v`.
 
 Add the following code .env file. You will require a wallet account such as ArgentX or Braavos.
-- Replace _<Private Key>_ with the wallets private key and _<Address>_ with the wallets address.
+- Replace _Private Key_ with the wallets private key and _Address_ with the wallets address.
 - Based on Mainnet or Testnet or Devnet add the enpoint. Below Sepolia testnet RPC Endpoint is added.
 ```bash
-DEPLOYER_PRIVATE_KEY=<Private Key>
-DEPLOYER_ADDRESS=<Address>
+DEPLOYER_PRIVATE_KEY=Private Key
+DEPLOYER_ADDRESS=Address
 RPC_ENDPOINT=https://starknet-sepolia.public.blastapi.io/
 ```
 
@@ -103,10 +122,12 @@ Start the backend server.
 bun server
 ```
 
-Open another terminal run the development server:
+Open another terminal, go to the chain-quest folder and run the development server.
 ```bash
 npm run dev
 # or
 bun dev
 ```
 Open [http://localhost:3000](http://localhost:3000) in your browser to see the result.
+
+To stop backend/development server, click `ctrl + C`.
