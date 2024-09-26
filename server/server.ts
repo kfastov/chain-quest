@@ -16,8 +16,8 @@ const provider = new RpcProvider({
   nodeUrl: process.env.RPC_ENDPOINT,
 });
 
-function generateToken(user: { id: number, wallet_address: string }): string {
-    return jwt.sign({ id: user.id, wallet_address: user.wallet_address }, JWT_SECRET, { expiresIn: '1d' });
+function generateToken(user: { id: number, wallet_address: string, is_admin: boolean }): string {
+    return jwt.sign({ id: user.id, wallet_address: user.wallet_address, is_admin: user.is_admin }, JWT_SECRET, { expiresIn: '1d' });
 }
 
 // Add this import at the top of the file
@@ -92,7 +92,7 @@ app.get('/api/users/me', authenticateToken, async (req: Request, res) => {
       console.log('Fetching user data for wallet address:', req.user?.wallet_address);
       const user = await prisma.user.findUnique({
         where: { wallet_address: req.user?.wallet_address },
-        select: { id: true, wallet_address: true, nickname: true }
+        select: { id: true, wallet_address: true, nickname: true, is_admin: true }
       });
       res.json({ message: 'This is a protected route', user });
     } catch (error) {
@@ -182,7 +182,6 @@ app.post('/api/auth/verify', async (req, res) => {
   }
 });
 
-// Add this new endpoint
 app.put('/api/users/update/self', authenticateToken, async (req: Request, res) => {
   if (!req.user || !req.user.wallet_address) {
     return res.status(401).json({ error: 'Unauthorized' });
@@ -216,4 +215,34 @@ app.put('/api/users/update/self', authenticateToken, async (req: Request, res) =
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
+});
+
+app.post('/api/games', authenticateToken, async (req: Request, res) => {
+  if (!req.user || !req.user.is_admin) {
+    return res.status(403).json({ error: 'Unauthorized' });
+  }
+
+  const { contractAddress, name } = req.body;
+  try {
+    const game = await prisma.game.create({
+      data: {
+        contractAddress,
+        name,
+      },
+    });
+    res.json({ message: 'Game added successfully', game });
+  } catch (error) {
+    console.error('Error adding game:', error);
+    res.status(500).json({ error: 'Error adding game' });
+  }
+});
+
+app.get('/api/games', authenticateToken, async (req: Request, res) => {
+  try {
+    const games = await prisma.game.findMany();
+    res.json({ games });
+  } catch (error) {
+    console.error('Error fetching games:', error);
+    res.status(500).json({ error: 'Error fetching games' });
+  }
 });

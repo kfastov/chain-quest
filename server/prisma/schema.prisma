@@ -18,6 +18,15 @@ model User {
   wallet_address  String   @unique
   nickname        String?
   starknet_id     String?
+  is_admin        Boolean  @default(false)
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+}
+
+model Game {
+  id              Int      @id @default(autoincrement())
+  contractAddress String   @unique
+  name            String
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
 }
